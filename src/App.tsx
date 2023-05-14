@@ -1,27 +1,32 @@
-import { FC, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { Post } from "./components/posts/type";
 import "./App.css";
 import Posts from "./components/posts/Posts";
 import Search from "./components/search/Search";
-interface Post {
-  id: number;
-  title: string;
-  body: string;
-  favorites: boolean;
-}
+
 function App() {
-  const [title, setTitle] = useState<string>("");
+  const [search, setSearch] = useState<string>("");
   const [filter, setFilter] = useState<Post[]>([]);
 
   useEffect(() => {
-    fetch(`http://localhost:3000/posts?title_like=${title}`)
-      .then((response) => response.json())
-      .then((data) => setFilter(data));
-  }, [title]);
+    const fetchFilterPosts = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:3000/posts?title_like=${search}`
+        );
+        const data = await response.json();
+        setFilter(data);
+      } catch (err) {
+        console.error("Error");
+      }
+    };
+    fetchFilterPosts();
+  }, [search]);
 
   return (
     <div className="App">
-      <Search setTitle={setTitle} />
-      <Posts title={title} setFilter={setFilter} filter={filter} />
+      <Search setSearch={setSearch} />
+      <Posts search={search} setFilter={setFilter} filter={filter} />
     </div>
   );
 }

@@ -1,11 +1,11 @@
 import { FC, ChangeEvent } from "react";
 import debounce from "lodash.debounce";
 interface SearchProps {
-  setTitle: React.Dispatch<React.SetStateAction<string>>;
+  setSearch: React.Dispatch<React.SetStateAction<string>>;
 }
-const Search: FC<SearchProps> = ({ setTitle }) => {
+const Search: FC<SearchProps> = ({ setSearch }) => {
   const handleChange = (event: ChangeEvent<HTMLInputElement>) =>
-    setTitle(event.target.value);
+    setSearch(event.target.value);
   const debounceOnChange = debounce(handleChange, 500);
   return (
     <div>

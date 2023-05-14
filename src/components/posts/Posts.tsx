@@ -1,37 +1,42 @@
 import { FC, useState, useEffect } from "react";
-interface Post {
-  id: number;
-  title: string;
-  body: string;
-  favorites: boolean;
-}
+import { Post } from "./type";
+import FilterItems from "./FilterItems";
+import PostItem from "./PostItem";
+
 interface PostProps {
   setFilter: React.Dispatch<React.SetStateAction<Post[]>>;
-  title: string;
+  search: string;
   filter: Post[];
 }
+
 interface StateItem {
-  error: null | "";
-  items: Post[];
+  error: null | string;
+  postList: Post[];
 }
-const Posts: FC<PostProps> = ({ title, filter, setFilter }) => {
+
+const Posts: FC<PostProps> = ({ search, filter, setFilter }) => {
   const [state, setState] = useState<StateItem>({
     error: null,
-    items: [],
+    postList: [],
   });
+
   useEffect(() => {
-    fetch("http://localhost:3000/posts")
-      .then((response) => response.json())
-      .then(
-        (data) => setState({ ...state, items: data }),
-        (error) => {
-          setState({ ...state, error });
-        }
-      );
+    const fetchPosts = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/posts");
+        const data = await response.json();
+        setState((prevState) => ({ ...prevState, postList: data }));
+      } catch (err) {
+        setState((prevState) => ({
+          ...prevState,
+          error: err?.toString() || "Неизвестная ошибка",
+        }));
+      }
+    };
+    fetchPosts();
   }, []);
 
-  let message;
-  const favoritesPost = (item: Post) => {
+  const handlerPostClick = (item: Post) => {
     const requestOptions = {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -39,48 +44,39 @@ const Posts: FC<PostProps> = ({ title, filter, setFilter }) => {
         id: item.id,
         title: item.title,
         body: item.body,
-        favorites: !item.favorites,
+        isFavorite: !item.isFavorite,
       }),
     };
-    fetch(`http://localhost:3000/posts/${item.id}/`, requestOptions)
-      .then((response) => response.json())
-      .then((data) =>
-        setState({
-          ...state,
-          items: [
-            ...state.items.slice(0, item.id - 1),
+    const fetchFavoritePost = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:3000/posts/${item.id}/`,
+          requestOptions
+        );
+        const data = await response.json();
+        setState((prevState) => ({
+          ...prevState,
+          postList: [
+            ...state.postList.slice(0, item.id - 1),
             data,
-            ...state.items.slice(item.id),
+            ...state.postList.slice(item.id),
           ],
-        })
-      );
+        }));
+      } catch (err) {
+        console.error("Error");
+      }
+    };
+    fetchFavoritePost();
   };
-  if (state.error) {
-    message = <p>Error</p>;
-  } else {
-    message = state.items.map((item) => {
-      const post__classes = item.favorites
-        ? "favorites__red"
-        : "favorites__grey";
 
-      return (
-        <li className="post__item" key={item.id}>
-          <div className="post__inner">
-            <div className="post__title">{item.title}</div>
-            <div className="post__text">{item.body}</div>
-          </div>
-          <div onClick={() => favoritesPost(item)}>
-            <img
-              className={post__classes}
-              src="images/like-3.svg"
-              alt="favorites"
-            />
-          </div>
-        </li>
-      );
-    });
+  if (state.error) {
+    return <p>Error</p>;
   }
-  const favoritesPostFilter = (item: Post) => {
+  const message = state.postList.map((item) => {
+    return <PostItem item={item} handlerPostClick={handlerPostClick} />;
+  });
+
+  const handlerFavoriteClick = (item: Post) => {
     const requestOptions = {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -88,40 +84,38 @@ const Posts: FC<PostProps> = ({ title, filter, setFilter }) => {
         id: item.id,
         title: item.title,
         body: item.body,
-        favorites: !item.favorites,
+        isFavorite: !item.isFavorite,
       }),
     };
-    fetch(`http://localhost:3000/posts/${item.id}/`, requestOptions)
-      .then((response) => response.json())
-      .then((data) =>
-        setFilter([
-          ...filter.slice(0, item.id - 1),
-          data,
-          ...filter.slice(item.id),
-        ])
-      );
+    const fetchFavoriteFilter = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:3000/posts/${item.id}/`,
+          requestOptions
+        );
+
+        const data = await response.json();
+        setFilter((prevList) =>
+          prevList.map((item) => {
+            if (item.id === data.id) {
+              return { ...item, ...data };
+            }
+          })
+        );
+      } catch (err) {
+        console.error("Error");
+      }
+    };
+    fetchFavoriteFilter();
   };
   const filterItem = filter.map((item) => {
-    const post__classes = item.favorites ? "favorites__red" : "favorites__grey";
     return (
-      <li className="post__item" key={item.id}>
-        <div className="post__inner">
-          <div className="post__title">{item.title}</div>
-          <div className="post__text">{item.body}</div>
-        </div>
-        <div onClick={() => favoritesPostFilter(item)}>
-          <img
-            className={post__classes}
-            src="images/like-3.svg"
-            alt="favorites"
-          />
-        </div>
-      </li>
+      <FilterItems item={item} handlerFavoriteClick={handlerFavoriteClick} />
     );
   });
 
-  const posts = title.length <= 0 ? message : filterItem;
-
+  const posts = search.length <= 0 ? message : filterItem;
   return <ul className="posts__list">{posts}</ul>;
 };
+
 export default Posts;
