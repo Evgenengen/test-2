@@ -1,19 +1,37 @@
-import { useEffect } from "react";
-
-const Posts = ({ title, filter, setFilter, state, setState }) => {
+import { FC, useState, useEffect } from "react";
+interface Post {
+  id: number;
+  title: string;
+  body: string;
+  favorites: boolean;
+}
+interface PostProps {
+  setFilter: React.Dispatch<React.SetStateAction<Post[]>>;
+  title: string;
+  filter: Post[];
+}
+interface StateItem {
+  error: null | "";
+  items: Post[];
+}
+const Posts: FC<PostProps> = ({ title, filter, setFilter }) => {
+  const [state, setState] = useState<StateItem>({
+    error: null,
+    items: [],
+  });
   useEffect(() => {
     fetch("http://localhost:3000/posts")
       .then((response) => response.json())
       .then(
-        (data) => setState({ ...state, items: data, isLoaded: true }),
+        (data) => setState({ ...state, items: data }),
         (error) => {
-          setState({ ...state, isLoaded: true, error });
+          setState({ ...state, error });
         }
       );
   }, []);
 
   let message;
-  const favoritesPost = (item) => {
+  const favoritesPost = (item: Post) => {
     const requestOptions = {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -62,7 +80,7 @@ const Posts = ({ title, filter, setFilter, state, setState }) => {
       );
     });
   }
-  const favoritesPostFilter = (item) => {
+  const favoritesPostFilter = (item: Post) => {
     const requestOptions = {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
