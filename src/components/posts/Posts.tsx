@@ -1,7 +1,5 @@
 import { FC, useState, useEffect } from "react";
 import { Post } from "./type";
-import FilterItems from "./FilterItems";
-import PostItem from "./PostItem";
 
 interface PostProps {
   setFilter: React.Dispatch<React.SetStateAction<Post[]>>;
@@ -73,7 +71,22 @@ const Posts: FC<PostProps> = ({ search, filter, setFilter }) => {
     return <p>Error</p>;
   }
   const message = state.postList.map((item) => {
-    return <PostItem item={item} handlerPostClick={handlerPostClick} />;
+    const postСlasses = item.isFavorite ? "favorites__red" : "favorites__grey";
+    return (
+      <li className="post__item" key={item.id}>
+        <div className="post__inner">
+          <div className="post__title">{item.title}</div>
+          <div className="post__text">{item.body}</div>
+        </div>
+        <div onClick={() => handlerPostClick(item)}>
+          <img
+            className={postСlasses}
+            src="images/like-3.svg"
+            alt="favorites"
+          />
+        </div>
+      </li>
+    );
   });
 
   const handlerFavoriteClick = (item: Post) => {
@@ -100,6 +113,7 @@ const Posts: FC<PostProps> = ({ search, filter, setFilter }) => {
             if (item.id === data.id) {
               return { ...item, ...data };
             }
+            return item;
           })
         );
       } catch (err) {
@@ -108,9 +122,23 @@ const Posts: FC<PostProps> = ({ search, filter, setFilter }) => {
     };
     fetchFavoriteFilter();
   };
+
   const filterItem = filter.map((item) => {
+    const postСlasses = item.isFavorite ? "favorites__red" : "favorites__grey";
     return (
-      <FilterItems item={item} handlerFavoriteClick={handlerFavoriteClick} />
+      <li className="post__item" key={item.id}>
+        <div className="post__inner">
+          <div className="post__title">{item.title}</div>
+          <div className="post__text">{item.body}</div>
+        </div>
+        <div onClick={() => handlerFavoriteClick(item)}>
+          <img
+            className={postСlasses}
+            src="images/like-3.svg"
+            alt="favorites"
+          />
+        </div>
+      </li>
     );
   });
 
