@@ -20,7 +20,7 @@ function App() {
         const data = await response.json();
         setFilter(data);
       } catch (err) {
-        console.error("Ошибка");
+        console.error(" Ошибка");
       }
     };
 
