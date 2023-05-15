@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import { Post } from "./components/posts/type";
 import "./App.css";
-import Posts from "./components/posts/Posts";
+import Posts, { Post } from "./components/posts/Posts";
 import Search from "./components/search/Search";
 
 function App() {
@@ -9,7 +8,11 @@ function App() {
   const [filter, setFilter] = useState<Post[]>([]);
 
   useEffect(() => {
-    const fetchFilterPosts = async () => {
+    if (!search) {
+      return;
+    }
+
+    const fetchSearchPosts = async () => {
       try {
         const response = await fetch(
           `http://localhost:3000/posts?title_like=${search}`
@@ -17,10 +20,11 @@ function App() {
         const data = await response.json();
         setFilter(data);
       } catch (err) {
-        console.error("Error");
+        console.error("Ошибка");
       }
     };
-    fetchFilterPosts();
+
+    fetchSearchPosts();
   }, [search]);
 
   return (
